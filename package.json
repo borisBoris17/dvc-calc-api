@@ -1,0 +1,29 @@
+{
+  "name": "dvc-calc-api",
+  "version": "1.0.0",
+  "description": "API for calculating number of points needed for a dvc stay",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/borisBoris17/dvc-calc-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/borisBoris17/dvc-calc-api/issues"
+  },
+  "homepage": "https://github.com/borisBoris17/dvc-calc-api#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.1",
+    "mongoose": "^6.5.3",
+    "pg": "^8.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "2.0.19"
+  }
+}
