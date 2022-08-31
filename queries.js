@@ -54,6 +54,16 @@ const getViewTypesByRoomType = (request, response) => {
   })
 }
 
+const getPointValuesByViewType = (request, response) => {
+  const id = parseInt(request.params.id)
+  pool.query('SELECT * FROM point_value WHERE view_type_id = $1 ORDER BY view_type_id ASC', [id], (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
 const createRoomType = (request, response) => {
   const { resort_id, name, capacity } = request.body
 
@@ -134,6 +144,7 @@ module.exports = {
   getRoomTypesByResort,
   getViewTypes,
   getViewTypesByRoomType,
+  getPointValuesByViewType,
   getPointAmount,
   createRoomType,
   createViewType,
@@ -146,16 +157,6 @@ function getDateFromString(dateArray) {
   const day = parseInt(dateArray[2])
   const date = new Date(year, month, day)
   return date
-}
-
-function Inserts(template, data) {
-  if (!(this instanceof Inserts)) {
-      return new Inserts(template, data);
-  }
-  this._rawDBType = true;
-  this.formatDBType = function () {
-      return data.map(d=>'(' + pgp.as.format(template, d) + ')').join(',');
-  };
 }
 
 function saveNewPointValue(pointValues) {
@@ -178,19 +179,6 @@ function saveNewPointValue(pointValues) {
       }
     });
     if (pointValuesToInsert.length > 0) {
-      const weekdayRateValues = [];
-      const weekendRateValues = [];
-      const startDateValues = [];
-      const endDateValues = [];
-      const viewTypeIdValues = [];
-      pointValuesToInsert.map(pointValueToInsert => {
-        weekdayRateValues.push(pointValueToInsert[0]);
-        weekendRateValues.push(pointValueToInsert[1]);
-        startDateValues.push(pointValueToInsert[2]);
-        endDateValues.push(pointValueToInsert[3]);
-        viewTypeIdValues.push(pointValueToInsert[4]);
-      });
-
       pool.query(
         `INSERT INTO point_value (weekday_rate, weekend_rate, start_date, end_date, view_type_id) Values ${expand(pointValuesToInsert.length, 5)}`,
         flatten(pointValuesToInsert), (error, results) => {

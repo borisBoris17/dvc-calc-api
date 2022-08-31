@@ -20,6 +20,7 @@ app.get('/roomTypes', db.getRoomTypes)
 app.get('/roomTypes/:id', db.getRoomTypesByResort)
 app.get('/viewTypes', db.getViewTypes)
 app.get('/viewTypes/:id', db.getViewTypesByRoomType)
+app.get('/pointValue/:id', db.getPointValuesByViewType)
 app.get('/pointAmount/:id/:beginDate/:endDate', db.getPointAmount)
 
 app.post('/roomType', db.createRoomType)
