@@ -54,22 +54,6 @@ const getViewTypesByRoomType = (request, response) => {
   })
 }
 
-const getPointAmount = async (request, response) => {
-  console.log('In calculate');
-  const responseObj = {};
-  let totalPointsNeeded = 0;
-  const viewTypeId = parseInt(request.params.id)
-  const beginDate = getDateFromString(request.params.beginDate.split('-'))
-  const endDate = getDateFromString(request.params.endDate.split('-'))
-  while (beginDate < endDate) {
-    const amountForDay = await fetchPointsForNight(viewTypeId, beginDate);
-    totalPointsNeeded = totalPointsNeeded + amountForDay;
-    beginDate.setDate(beginDate.getDate() + 1);
-  }
-  responseObj['numPoints'] = totalPointsNeeded
-  response.status(200).json(responseObj)
-}
-
 const createRoomType = (request, response) => {
   const { resort_id, name, capacity } = request.body
 
@@ -92,28 +76,29 @@ const createViewType = (request, response) => {
   })
 }
 
-const createPointValues = (request, response) => {
+const createPointValues = async (request, response) => {
   const { pointValues } = request.body
-  console.log(pointValues);
-  pointValues.map(pointValue => {
-    let startDate = new Date();
-    let startDateArray = pointValue.start_date.split('-');
-    startDate.setFullYear(startDateArray[0]);
-    startDate.setMonth(startDateArray[1] - 1);
-    startDate.setDate(startDateArray[2]);
+  const numPointValuesAdded = await saveNewPointValue(pointValues);
+  if (numPointValuesAdded > 0) {
+    response.status(201).send(`${numPointValuesAdded} Point Values added.`);
+  } else {
+    response.status(201).send(`No new Point Values added.`);
+  }
+}
 
-    let endDate = new Date();
-    let endDateArray = pointValue.end_date.split('-');
-    endDate.setFullYear(endDateArray[0]);
-    endDate.setMonth(endDateArray[1] - 1);
-    endDate.setDate(endDateArray[2]);
-    pool.query('INSERT INTO point_value (weekday_rate, weekend_rate, start_date, end_date, view_type_id) VALUES ($1, $2, $3, $4, $5) returning *', [parseInt(pointValue.weekday_rate), parseInt(pointValue.weekend_rate), startDate, endDate, parseInt(pointValue.view_type_id)], (error, results) => {
-      if (error) {
-        throw error
-      }
-      response.status(201).send(`Point Value added with ID: ${results.rows[0].point_value_id}`)
-    });
-  });
+const getPointAmount = async (request, response) => {
+  const responseObj = {};
+  let totalPointsNeeded = 0;
+  const viewTypeId = parseInt(request.params.id)
+  const beginDate = getDateFromString(request.params.beginDate.split('-'))
+  const endDate = getDateFromString(request.params.endDate.split('-'))
+  while (beginDate < endDate) {
+    const amountForDay = await fetchPointsForNight(viewTypeId, beginDate);
+    totalPointsNeeded = totalPointsNeeded + amountForDay;
+    beginDate.setDate(beginDate.getDate() + 1);
+  }
+  responseObj['numPoints'] = totalPointsNeeded
+  response.status(200).json(responseObj)
 }
 
 const updateUser = (request, response) => {
@@ -161,6 +146,74 @@ function getDateFromString(dateArray) {
   const day = parseInt(dateArray[2])
   const date = new Date(year, month, day)
   return date
+}
+
+function Inserts(template, data) {
+  if (!(this instanceof Inserts)) {
+      return new Inserts(template, data);
+  }
+  this._rawDBType = true;
+  this.formatDBType = function () {
+      return data.map(d=>'(' + pgp.as.format(template, d) + ')').join(',');
+  };
+}
+
+function saveNewPointValue(pointValues) {
+  return new Promise(resolve => {
+    const pointValuesToInsert = []
+    pointValues.map(pointValue => {
+      if (parseInt(pointValue.point_value_id) === -1) {
+        let startDate = new Date();
+        let startDateArray = pointValue.start_date.split('-');
+        startDate.setFullYear(startDateArray[0]);
+        startDate.setMonth(startDateArray[1] - 1);
+        startDate.setDate(startDateArray[2]);
+
+        let endDate = new Date();
+        let endDateArray = pointValue.end_date.split('-');
+        endDate.setFullYear(endDateArray[0]);
+        endDate.setMonth(endDateArray[1] - 1);
+        endDate.setDate(endDateArray[2]);
+        pointValuesToInsert.push([parseInt(pointValue.weekday_rate), parseInt(pointValue.weekend_rate), startDate, endDate, parseInt(pointValue.view_type_id)]);
+      }
+    });
+    if (pointValuesToInsert.length > 0) {
+      const weekdayRateValues = [];
+      const weekendRateValues = [];
+      const startDateValues = [];
+      const endDateValues = [];
+      const viewTypeIdValues = [];
+      pointValuesToInsert.map(pointValueToInsert => {
+        weekdayRateValues.push(pointValueToInsert[0]);
+        weekendRateValues.push(pointValueToInsert[1]);
+        startDateValues.push(pointValueToInsert[2]);
+        endDateValues.push(pointValueToInsert[3]);
+        viewTypeIdValues.push(pointValueToInsert[4]);
+      });
+
+      pool.query(
+        `INSERT INTO point_value (weekday_rate, weekend_rate, start_date, end_date, view_type_id) Values ${expand(pointValuesToInsert.length, 5)}`,
+        flatten(pointValuesToInsert), (error, results) => {
+        if (error) {
+          throw error
+        }
+        resolve(pointValuesToInsert.length);
+      });
+    } else {
+      resolve(0);
+    }
+  });
+}
+
+function expand(rowCount, columnCount, startAt=1){
+  var index = startAt
+  return Array(rowCount).fill(0).map(v => `(${Array(columnCount).fill(0).map(v => `$${index++}`).join(", ")})`).join(", ")
+}
+
+function flatten(arr){
+  var newArr = []
+  arr.forEach(v => v.forEach(p => newArr.push(p)))
+  return newArr
 }
 
 function fetchPointsForNight(viewTypeId, date) {
