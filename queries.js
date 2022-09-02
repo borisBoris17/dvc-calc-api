@@ -56,7 +56,7 @@ const getViewTypesByRoomType = (request, response) => {
 
 const getPointValuesByViewType = (request, response) => {
   const id = parseInt(request.params.id)
-  pool.query('SELECT * FROM point_value WHERE view_type_id = $1 ORDER BY view_type_id ASC', [id], (error, results) => {
+  pool.query('SELECT * FROM point_value WHERE view_type_id = $1 ORDER BY weekday_rate ASC', [id], (error, results) => {
     if (error) {
       throw error
     }
@@ -163,7 +163,7 @@ function saveNewPointValue(pointValues) {
   return new Promise(resolve => {
     const pointValuesToInsert = []
     pointValues.map(pointValue => {
-      if (parseInt(pointValue.point_value_id) === -1) {
+      if (parseInt(pointValue.point_value_id) < 0) {
         let startDate = new Date();
         let startDateArray = pointValue.start_date.split('-');
         startDate.setFullYear(startDateArray[0]);
@@ -214,6 +214,7 @@ function fetchPointsForNight(viewTypeId, date) {
         if (date.getDay() == 5 || date.getDay() == 6) {
           resolve(results.rows[0].weekend_rate);
         }
+        console.log(date)
         resolve(results.rows[0].weekday_rate);
       });
   });
