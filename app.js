@@ -13,17 +13,17 @@ app.get('/', function (req, res) {
   res.json({ info: 'Node.js, Express, and Postgres API' })
 });
 
-app.get('/dvc-api/resorts', db.getResorts)
-app.get('/dvc-api/roomTypes', db.getRoomTypes)
-app.get('/dvc-api/roomTypes/:id', db.getRoomTypesByResort)
-app.get('/dvc-api/viewTypes', db.getViewTypes)
-app.get('/dvc-api/viewTypes/:id', db.getViewTypesByRoomType)
-app.get('/dvc-api/pointValue/:id', db.getPointValuesByViewType)
-app.get('/dvc-api/pointAmount/:id/:beginDate/:endDate', db.getPointAmount)
+app.get('/dvc-calc-api/resorts', db.getResorts)
+app.get('/dvc-calc-api/roomTypes', db.getRoomTypes)
+app.get('/dvc-calc-api/roomTypes/:id', db.getRoomTypesByResort)
+app.get('/dvc-calc-api/viewTypes', db.getViewTypes)
+app.get('/dvc-calc-api/viewTypes/:id', db.getViewTypesByRoomType)
+app.get('/dvc-calc-api/pointValue/:id', db.getPointValuesByViewType)
+app.get('/dvc-calc-api/pointAmount/:id/:beginDate/:endDate', db.getPointAmount)
 
-app.post('/dvc-api/roomType', db.createRoomType)
-app.post('/dvc-api/viewType', db.createViewType)
-app.post('/dvc-api/pointValue', db.createPointValues)
+app.post('/dvc-calc-api/roomType', db.createRoomType)
+app.post('/dvc-calc-api/viewType', db.createViewType)
+app.post('/dvc-calc-api/pointValue', db.createPointValues)
 // app.put('/users/:id', db.updateUser)
 // app.delete('/users/:id', db.deleteUser)
 
