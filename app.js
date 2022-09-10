@@ -7,25 +7,23 @@ const app = express();
 app.use(cors());
 const port = 3001;
 
-const resorts = [{name:"Riviera", id:"1"}, {name:"Grand Floridian", id:"2"}];
-
 app.use(bodyParser.json())
 
 app.get('/', function (req, res) {
   res.json({ info: 'Node.js, Express, and Postgres API' })
 });
 
-app.get('/resorts', db.getResorts)
-app.get('/roomTypes', db.getRoomTypes)
-app.get('/roomTypes/:id', db.getRoomTypesByResort)
-app.get('/viewTypes', db.getViewTypes)
-app.get('/viewTypes/:id', db.getViewTypesByRoomType)
-app.get('/pointValue/:id', db.getPointValuesByViewType)
-app.get('/pointAmount/:id/:beginDate/:endDate', db.getPointAmount)
+app.get('/dvc-api/resorts', db.getResorts)
+app.get('/dvc-api/roomTypes', db.getRoomTypes)
+app.get('/dvc-api/roomTypes/:id', db.getRoomTypesByResort)
+app.get('/dvc-api/viewTypes', db.getViewTypes)
+app.get('/dvc-api/viewTypes/:id', db.getViewTypesByRoomType)
+app.get('/dvc-api/pointValue/:id', db.getPointValuesByViewType)
+app.get('/dvc-api/pointAmount/:id/:beginDate/:endDate', db.getPointAmount)
 
-app.post('/roomType', db.createRoomType)
-app.post('/viewType', db.createViewType)
-app.post('/pointValue', db.createPointValues)
+app.post('/dvc-api/roomType', db.createRoomType)
+app.post('/dvc-api/viewType', db.createViewType)
+app.post('/dvc-api/pointValue', db.createPointValues)
 // app.put('/users/:id', db.updateUser)
 // app.delete('/users/:id', db.deleteUser)
 
