@@ -1,13 +1,9 @@
 const Pool = require('pg').Pool
-const pool = new Pool({
-  user: 'pi',
-  host: 'localhost',
-  database: 'dvc_api',
-  password: 'password',
-  port: 5432,
-})
+const config = require('./config');
+const pool = new Pool(config.db);
 
 const getResorts = (request, response) => {
+  console.log(config.db);
   pool.query('SELECT * FROM resort ORDER BY resort_id ASC', (error, results) => {
     if (error) {
       throw error
