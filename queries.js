@@ -3,7 +3,6 @@ const config = require('./config');
 const pool = new Pool(config.db);
 
 const getResorts = (request, response) => {
-  console.log(config.db);
   pool.query('SELECT * FROM resort ORDER BY resort_id ASC', (error, results) => {
     if (error) {
       throw error
@@ -107,6 +106,66 @@ const getPointAmount = async (request, response) => {
   response.status(200).json(responseObj)
 }
 
+const createPointBlock = async (request, response) => {
+  const { pointBlockGroupName, valueIndex, dateRanges } = request.body;
+  savePointBlock(pointBlockGroupName, valueIndex).then(async (pointBlockId) =>  {
+    const numDateRangesInserted = await saveNewDateRangeForPointBlock(pointBlockId, dateRanges);
+    if (numDateRangesInserted > 0) {
+      response.status(200).send(`${numDateRangesInserted} Date Ranges added.`);
+    } else {
+      response.status(201).send(`No new Date Ranges added.`);
+    }
+  });
+}
+
+const savePointBlock = async (pointBlockGroupName, valueIndex) => {
+  return new Promise(function (resolve, reject) {
+    pool.query('INSERT INTO point_block (point_block_group, value_index) VALUES ($1, $2) returning *', [pointBlockGroupName, parseInt(valueIndex)], (err, res) => {
+      if (err) {
+        console.log('Error saving to db: ' + err);
+        reject(0)
+      } else {
+        resolve(res.rows[0].point_block_id)
+      }
+    });
+  });
+}
+
+function saveNewDateRangeForPointBlock(pointBlockId, dateRanges) {
+  return new Promise(resolve => {
+    const dateRangesToInsert = []
+    dateRanges.map(dateRange => {
+      if (parseInt(dateRange.date_range_id) < 0) {
+        let startDate = new Date();
+        let startDateArray = dateRange.start_date.split('-');
+        startDate.setFullYear(startDateArray[0]);
+        startDate.setMonth(startDateArray[1] - 1);
+        startDate.setDate(startDateArray[2]);
+
+        let endDate = new Date();
+        let endDateArray = dateRange.end_date.split('-');
+        endDate.setFullYear(endDateArray[0]);
+        endDate.setMonth(endDateArray[1] - 1);
+        endDate.setDate(endDateArray[2]);
+        dateRangesToInsert.push([startDate, endDate, parseInt(pointBlockId)]);
+      }
+    });
+    if (dateRangesToInsert.length > 0) {
+      console.log(flatten(dateRangesToInsert));
+      pool.query(
+        `INSERT INTO date_range (start_date, end_date, point_block_id) Values ${expand(dateRangesToInsert.length, 3)}`,
+        flatten(dateRangesToInsert), (error, results) => {
+          if (error) {
+            throw error
+          }
+          resolve(dateRangesToInsert.length);
+        });
+    } else {
+      resolve(0);
+    }
+  });
+}
+
 const updateUser = (request, response) => {
   const id = parseInt(request.params.id)
   const { name, email } = request.body
@@ -144,7 +203,8 @@ module.exports = {
   getPointAmount,
   createRoomType,
   createViewType,
-  createPointValues
+  createPointValues,
+  createPointBlock
 }
 
 function getDateFromString(dateArray) {
@@ -178,23 +238,23 @@ function saveNewPointValue(pointValues) {
       pool.query(
         `INSERT INTO point_value (weekday_rate, weekend_rate, start_date, end_date, view_type_id) Values ${expand(pointValuesToInsert.length, 5)}`,
         flatten(pointValuesToInsert), (error, results) => {
-        if (error) {
-          throw error
-        }
-        resolve(pointValuesToInsert.length);
-      });
+          if (error) {
+            throw error
+          }
+          resolve(pointValuesToInsert.length);
+        });
     } else {
       resolve(0);
     }
   });
 }
 
-function expand(rowCount, columnCount, startAt=1){
+function expand(rowCount, columnCount, startAt = 1) {
   var index = startAt
   return Array(rowCount).fill(0).map(v => `(${Array(columnCount).fill(0).map(v => `$${index++}`).join(", ")})`).join(", ")
 }
 
-function flatten(arr){
+function flatten(arr) {
   var newArr = []
   arr.forEach(v => v.forEach(p => newArr.push(p)))
   return newArr

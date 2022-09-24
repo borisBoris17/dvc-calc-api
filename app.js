@@ -24,6 +24,7 @@ app.get('/dvc-calc-api/pointAmount/:id/:beginDate/:endDate', db.getPointAmount)
 app.post('/dvc-calc-api/roomType', db.createRoomType)
 app.post('/dvc-calc-api/viewType', db.createViewType)
 app.post('/dvc-calc-api/pointValue', db.createPointValues)
+app.post('/dvc-calc-api/pointBlock', db.createPointBlock)
 // app.put('/users/:id', db.updateUser)
 // app.delete('/users/:id', db.deleteUser)
 
