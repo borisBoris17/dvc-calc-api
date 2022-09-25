@@ -39,6 +39,15 @@ const getViewTypes = (request, response) => {
   })
 }
 
+const getPointBlockGroups = (request, response) => {
+  pool.query('SELECT * FROM point_block_group ORDER BY point_block_group_name ASC', (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
 const getViewTypesByRoomType = (request, response) => {
   const id = parseInt(request.params.id)
   pool.query('SELECT * FROM view_type WHERE room_type_id = $1 ORDER BY view_type_id ASC', [id], (error, results) => {
@@ -57,6 +66,16 @@ const getPointValuesByViewType = (request, response) => {
     }
     response.status(200).json(results.rows)
   })
+}
+
+const getPointBlocks = async (request, response) => {
+  const groupId = parseInt(request.params.groupId);
+  pool.query('SELECT * FROM point_block WHERE point_block_group_id = $1 ORDER BY value_index ASC', [groupId], (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows);
+  });
 }
 
 const createRoomType = (request, response) => {
@@ -107,8 +126,8 @@ const getPointAmount = async (request, response) => {
 }
 
 const createPointBlock = async (request, response) => {
-  const { pointBlockGroupName, valueIndex, dateRanges } = request.body;
-  savePointBlock(pointBlockGroupName, valueIndex).then(async (pointBlockId) =>  {
+  const { pointBlockGroupId, valueIndex, dateRanges } = request.body;
+  savePointBlock(pointBlockGroupId, valueIndex).then(async (pointBlockId) =>  {
     const numDateRangesInserted = await saveNewDateRangeForPointBlock(pointBlockId, dateRanges);
     if (numDateRangesInserted > 0) {
       response.status(200).send(`${numDateRangesInserted} Date Ranges added.`);
@@ -118,9 +137,9 @@ const createPointBlock = async (request, response) => {
   });
 }
 
-const savePointBlock = async (pointBlockGroupName, valueIndex) => {
+const savePointBlock = async (pointBlockGroupId, valueIndex) => {
   return new Promise(function (resolve, reject) {
-    pool.query('INSERT INTO point_block (point_block_group, value_index) VALUES ($1, $2) returning *', [pointBlockGroupName, parseInt(valueIndex)], (err, res) => {
+    pool.query('INSERT INTO point_block (point_block_group_id, value_index) VALUES ($1, $2) returning *', [parseInt(pointBlockGroupId), parseInt(valueIndex)], (err, res) => {
       if (err) {
         console.log('Error saving to db: ' + err);
         reject(0)
@@ -199,6 +218,8 @@ module.exports = {
   getRoomTypesByResort,
   getViewTypes,
   getViewTypesByRoomType,
+  getPointBlockGroups,
+  getPointBlocks,
   getPointValuesByViewType,
   getPointAmount,
   createRoomType,

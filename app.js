@@ -20,6 +20,8 @@ app.get('/dvc-calc-api/viewTypes', db.getViewTypes)
 app.get('/dvc-calc-api/viewTypes/:id', db.getViewTypesByRoomType)
 app.get('/dvc-calc-api/pointValue/:id', db.getPointValuesByViewType)
 app.get('/dvc-calc-api/pointAmount/:id/:beginDate/:endDate', db.getPointAmount)
+app.get('/dvc-calc-api/pointBlock/:groupId', db.getPointBlocks);
+app.get('/dvc-calc-api/pointBlockGroup', db.getPointBlockGroups);
 
 app.post('/dvc-calc-api/roomType', db.createRoomType)
 app.post('/dvc-calc-api/viewType', db.createViewType)
