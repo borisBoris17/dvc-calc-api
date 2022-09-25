@@ -70,7 +70,8 @@ const getPointValuesByViewType = (request, response) => {
 
 const getPointBlocks = async (request, response) => {
   const groupId = parseInt(request.params.groupId);
-  pool.query('SELECT * FROM point_block WHERE point_block_group_id = $1 ORDER BY value_index ASC', [groupId], (error, results) => {
+  const year = parseInt(request.params.year);
+  pool.query('SELECT * FROM point_block WHERE point_block_group_id = $1 and point_block_year = $2 ORDER BY value_index ASC', [groupId, year], (error, results) => {
     if (error) {
       throw error
     }
@@ -126,8 +127,8 @@ const getPointAmount = async (request, response) => {
 }
 
 const createPointBlock = async (request, response) => {
-  const { pointBlockGroupId, valueIndex, dateRanges } = request.body;
-  savePointBlock(pointBlockGroupId, valueIndex).then(async (pointBlockId) =>  {
+  const { pointBlockGroupId, pointBlockYear, valueIndex, dateRanges } = request.body;
+  savePointBlock(pointBlockGroupId, pointBlockYear, valueIndex).then(async (pointBlockId) =>  {
     const numDateRangesInserted = await saveNewDateRangeForPointBlock(pointBlockId, dateRanges);
     if (numDateRangesInserted > 0) {
       response.status(200).send(`${numDateRangesInserted} Date Ranges added.`);
@@ -137,9 +138,9 @@ const createPointBlock = async (request, response) => {
   });
 }
 
-const savePointBlock = async (pointBlockGroupId, valueIndex) => {
+const savePointBlock = async (pointBlockGroupId, pointBlockYear, valueIndex) => {
   return new Promise(function (resolve, reject) {
-    pool.query('INSERT INTO point_block (point_block_group_id, value_index) VALUES ($1, $2) returning *', [parseInt(pointBlockGroupId), parseInt(valueIndex)], (err, res) => {
+    pool.query('INSERT INTO point_block (point_block_group_id, point_block_year, value_index) VALUES ($1, $2, $3) returning *', [parseInt(pointBlockGroupId), parseInt(pointBlockYear), parseInt(valueIndex)], (err, res) => {
       if (err) {
         console.log('Error saving to db: ' + err);
         reject(0)
