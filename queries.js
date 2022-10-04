@@ -20,6 +20,30 @@ const getRoomTypes = (request, response) => {
   })
 }
 
+const getRoomTypeAndViewTypes = (request, response) => {
+  const resortId = parseInt(request.params.resortId)
+  pool.query('select room_type.*, view_type.* from room_type ' +
+    'inner join view_type ' +
+    'on room_type.room_type_id = view_type.room_type_id ' +
+    'where resort_id = $1', [resortId], (error, results) => {
+      if (error) {
+        throw error
+      }
+      const map = new Map();
+      map.set([1, 2, 3], ['a', 'b', 'c']);
+      map.set([4, 5, 6], ['d', 'e', 'f']);
+      response.status(200).json(map.json);
+      // response.status(200).json(results.rows);
+    })
+}
+
+const buildRoomTypeViewTypeJSON = (rows) => {
+  const roomTypes = new Map();
+  for (let i = 0; i < rows.length; i++) {
+
+  }
+}
+
 const getRoomTypesByResort = (request, response) => {
   const id = parseInt(request.params.id)
   pool.query('SELECT * FROM room_type WHERE resort_id = $1 ORDER BY room_type_id ASC', [id], (error, results) => {
@@ -79,6 +103,16 @@ const getPointBlocks = async (request, response) => {
   });
 }
 
+const getDateRangesByPointBlockId = (request, response) => {
+  const pointBlockId = parseInt(request.params.id)
+  pool.query('SELECT * FROM date_range WHERE point_block_id = $1 ORDER BY start_date ASC', [pointBlockId], (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
 const createRoomType = (request, response) => {
   const { resort_id, name, capacity } = request.body
 
@@ -111,6 +145,18 @@ const createPointValues = async (request, response) => {
   }
 }
 
+const createPointValuesFromTable = async (request, response) => {
+  console.log('here')
+  const { pointValuesFromTable } = request.body
+  const dateRanges = await saveNewPointValueFromTable(pointValuesFromTable);
+  // console.log(dateRanges);
+  if (dateRanges != undefined) {
+    response.status(201).send(`${dateRanges} Point Values added.`);
+  } else {
+    response.status(201).send(`No new Point Values added.`);
+  }
+}
+
 const getPointAmount = async (request, response) => {
   const responseObj = {};
   let totalPointsNeeded = 0;
@@ -128,7 +174,7 @@ const getPointAmount = async (request, response) => {
 
 const createPointBlock = async (request, response) => {
   const { pointBlockGroupId, pointBlockYear, valueIndex, dateRanges } = request.body;
-  savePointBlock(pointBlockGroupId, pointBlockYear, valueIndex).then(async (pointBlockId) =>  {
+  savePointBlock(pointBlockGroupId, pointBlockYear, valueIndex).then(async (pointBlockId) => {
     const numDateRangesInserted = await saveNewDateRangeForPointBlock(pointBlockId, dateRanges);
     if (numDateRangesInserted > 0) {
       response.status(200).send(`${numDateRangesInserted} Date Ranges added.`);
@@ -218,14 +264,17 @@ module.exports = {
   getRoomTypes,
   getRoomTypesByResort,
   getViewTypes,
+  getRoomTypeAndViewTypes,
   getViewTypesByRoomType,
   getPointBlockGroups,
   getPointBlocks,
   getPointValuesByViewType,
+  getDateRangesByPointBlockId,
   getPointAmount,
   createRoomType,
   createViewType,
   createPointValues,
+  createPointValuesFromTable,
   createPointBlock
 }
 
@@ -295,5 +344,79 @@ function fetchPointsForNight(viewTypeId, date) {
         console.log(date)
         resolve(results.rows[0].weekday_rate);
       });
+  });
+}
+
+function saveNewPointValueFromTable(pointValuesFromTable) {
+  return new Promise(async resolve => {
+    const pointValuesToInsert = await buildListOfPointValuesToInsert(pointValuesFromTable);
+    console.log(pointValuesToInsert.length)
+    let numOfPointValuesCreated = await createNewPointValueFromTable(pointValuesToInsert);
+    resolve(numOfPointValuesCreated);
+  });
+
+}
+
+function buildListOfPointValuesToInsert(pointValuesFromTable) {
+  return new Promise( async resolve => {
+    const pointValuesToInsert = [];
+    const promises = pointValuesFromTable.map(async (pointValueFromTable) => {
+      const newValuesToInsert = await getDateRangeById(pointValueFromTable.point_block_id, pointValueFromTable)
+      return pointValuesToInsert.push(...newValuesToInsert);
+    });
+    let poinasv = await Promise.all(promises);
+    console.log(pointValuesToInsert)
+    resolve(pointValuesToInsert);
+  });
+}
+
+// recreate to query with all different dateRanges
+function getDateRangeById(pointBlockId, pointValueFromTable) {
+  return new Promise(resolve => {
+    pool.query(
+      'SELECT * FROM date_range WHERE point_block_id = $1 ORDER BY start_date ASC', [pointBlockId], (error, results) => {
+        if (error) {
+          throw error
+        }
+        const newPointValuesToInsert = [];
+        results.rows.map((dateRange) => {
+          let newPointValue = buildPointValueToAdd(dateRange, pointValueFromTable);
+          newPointValuesToInsert.push(newPointValue);
+        });
+        resolve(newPointValuesToInsert)
+      }
+    )
+  })
+}
+
+function buildPointValueToAdd(dateRange, pointValueFromTable) {
+  return {
+    view_type_id: pointValueFromTable.view_type_id,
+    start_date: dateRange.start_date,
+    end_date: dateRange.end_date,
+    weekday_rate: pointValueFromTable.weekday_rate,
+    weekend_rate: pointValueFromTable.weekend_rate,
+  }
+}
+
+function createNewPointValueFromTable(pointValues) {
+  return new Promise(resolve => {
+    const pointValuesToInsert = []
+    pointValues.map(pointValue => {
+      pointValuesToInsert.push([parseInt(pointValue.weekday_rate), parseInt(pointValue.weekend_rate), pointValue.start_date, pointValue.end_date, parseInt(pointValue.view_type_id)]);
+    });
+    console.log(pointValuesToInsert);
+    if (pointValuesToInsert.length > 0) {
+      pool.query(
+        `INSERT INTO point_value (weekday_rate, weekend_rate, start_date, end_date, view_type_id) Values ${expand(pointValuesToInsert.length, 5)}`,
+        flatten(pointValuesToInsert), (error, results) => {
+          if (error) {
+            throw error
+          }
+          resolve(pointValuesToInsert.length);
+        });
+    } else {
+      resolve(0);
+    }
   });
 }
