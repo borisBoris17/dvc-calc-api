@@ -146,10 +146,8 @@ const createPointValues = async (request, response) => {
 }
 
 const createPointValuesFromTable = async (request, response) => {
-  console.log('here')
   const { pointValuesFromTable } = request.body
   const dateRanges = await saveNewPointValueFromTable(pointValuesFromTable);
-  // console.log(dateRanges);
   if (dateRanges != undefined) {
     response.status(201).send(`${dateRanges} Point Values added.`);
   } else {
@@ -213,13 +211,12 @@ function saveNewDateRangeForPointBlock(pointBlockId, dateRanges) {
         endDate.setFullYear(endDateArray[0]);
         endDate.setMonth(endDateArray[1] - 1);
         endDate.setDate(endDateArray[2]);
-        dateRangesToInsert.push([startDate, endDate, parseInt(pointBlockId)]);
+        dateRangesToInsert.push([startDate, endDate, parseInt(pointBlockId), dateRange.date_range_desc]);
       }
     });
     if (dateRangesToInsert.length > 0) {
-      console.log(flatten(dateRangesToInsert));
       pool.query(
-        `INSERT INTO date_range (start_date, end_date, point_block_id) Values ${expand(dateRangesToInsert.length, 3)}`,
+        `INSERT INTO date_range (start_date, end_date, point_block_id, date_range_desc) Values ${expand(dateRangesToInsert.length, 4)}`,
         flatten(dateRangesToInsert), (error, results) => {
           if (error) {
             throw error
@@ -341,7 +338,6 @@ function fetchPointsForNight(viewTypeId, date) {
         if (date.getDay() == 5 || date.getDay() == 6) {
           resolve(results.rows[0].weekend_rate);
         }
-        console.log(date)
         resolve(results.rows[0].weekday_rate);
       });
   });
@@ -350,7 +346,6 @@ function fetchPointsForNight(viewTypeId, date) {
 function saveNewPointValueFromTable(pointValuesFromTable) {
   return new Promise(async resolve => {
     const pointValuesToInsert = await buildListOfPointValuesToInsert(pointValuesFromTable);
-    console.log(pointValuesToInsert.length)
     let numOfPointValuesCreated = await createNewPointValueFromTable(pointValuesToInsert);
     resolve(numOfPointValuesCreated);
   });
@@ -364,13 +359,11 @@ function buildListOfPointValuesToInsert(pointValuesFromTable) {
       const newValuesToInsert = await getDateRangeById(pointValueFromTable.point_block_id, pointValueFromTable)
       return pointValuesToInsert.push(...newValuesToInsert);
     });
-    let poinasv = await Promise.all(promises);
-    console.log(pointValuesToInsert)
+    await Promise.all(promises);
     resolve(pointValuesToInsert);
   });
 }
 
-// recreate to query with all different dateRanges
 function getDateRangeById(pointBlockId, pointValueFromTable) {
   return new Promise(resolve => {
     pool.query(
@@ -405,7 +398,6 @@ function createNewPointValueFromTable(pointValues) {
     pointValues.map(pointValue => {
       pointValuesToInsert.push([parseInt(pointValue.weekday_rate), parseInt(pointValue.weekend_rate), pointValue.start_date, pointValue.end_date, parseInt(pointValue.view_type_id)]);
     });
-    console.log(pointValuesToInsert);
     if (pointValuesToInsert.length > 0) {
       pool.query(
         `INSERT INTO point_value (weekday_rate, weekend_rate, start_date, end_date, view_type_id) Values ${expand(pointValuesToInsert.length, 5)}`,
