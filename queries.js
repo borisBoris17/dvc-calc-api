@@ -20,30 +20,6 @@ const getRoomTypes = (request, response) => {
   })
 }
 
-const getRoomTypeAndViewTypes = (request, response) => {
-  const resortId = parseInt(request.params.resortId)
-  pool.query('select room_type.*, view_type.* from room_type ' +
-    'inner join view_type ' +
-    'on room_type.room_type_id = view_type.room_type_id ' +
-    'where resort_id = $1', [resortId], (error, results) => {
-      if (error) {
-        throw error
-      }
-      const map = new Map();
-      map.set([1, 2, 3], ['a', 'b', 'c']);
-      map.set([4, 5, 6], ['d', 'e', 'f']);
-      response.status(200).json(map.json);
-      // response.status(200).json(results.rows);
-    })
-}
-
-const buildRoomTypeViewTypeJSON = (rows) => {
-  const roomTypes = new Map();
-  for (let i = 0; i < rows.length; i++) {
-
-  }
-}
-
 const getRoomTypesByResort = (request, response) => {
   const id = parseInt(request.params.id)
   pool.query('SELECT * FROM room_type WHERE resort_id = $1 ORDER BY room_type_id ASC', [id], (error, results) => {
@@ -261,7 +237,6 @@ module.exports = {
   getRoomTypes,
   getRoomTypesByResort,
   getViewTypes,
-  getRoomTypeAndViewTypes,
   getViewTypesByRoomType,
   getPointBlockGroups,
   getPointBlocks,
