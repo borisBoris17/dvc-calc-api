@@ -14,6 +14,7 @@ app.get('/', function (req, res) {
 });
 
 app.get('/dvc-calc-api/resorts', db.getResorts)
+app.get('/dvc-calc-api/resorts/:id', db.getResortById)
 app.get('/dvc-calc-api/roomTypes', db.getRoomTypes)
 app.get('/dvc-calc-api/roomTypes/:id', db.getRoomTypesByResort)
 app.get('/dvc-calc-api/viewTypes', db.getViewTypes)

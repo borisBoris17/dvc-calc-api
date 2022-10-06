@@ -11,6 +11,16 @@ const getResorts = (request, response) => {
   })
 }
 
+const getResortById = (request, response) => {
+  const id = parseInt(request.params.id)
+  pool.query('SELECT * FROM resort WHERE resort_id = $1 ORDER BY resort_id ASC', [id], (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
 const getRoomTypes = (request, response) => {
   pool.query('SELECT * FROM room_type ORDER BY room_type_id ASC', (error, results) => {
     if (error) {
@@ -195,6 +205,7 @@ const deleteUser = (request, response) => {
 
 module.exports = {
   getResorts,
+  getResortById,
   getRoomTypes,
   getRoomTypesByResort,
   getViewTypes,
