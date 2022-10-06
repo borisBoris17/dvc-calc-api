@@ -21,10 +21,14 @@ app.get('/dvc-calc-api/viewTypes', db.getViewTypes)
 app.get('/dvc-calc-api/viewTypes/:id', db.getViewTypesByRoomType)
 app.get('/dvc-calc-api/pointValue/:id', db.getPointValuesByViewType)
 app.get('/dvc-calc-api/pointAmount/:id/:beginDate/:endDate', db.getPointAmount)
+app.get('/dvc-calc-api/pointBlock/:groupId/:year', db.getPointBlocks);
+app.get('/dvc-calc-api/pointBlockGroup', db.getPointBlockGroups);
+app.get('/dvc-calc-api/dateRange/:id', db.getDateRangesByPointBlockId);
 
 app.post('/dvc-calc-api/roomType', db.createRoomType)
 app.post('/dvc-calc-api/viewType', db.createViewType)
 app.post('/dvc-calc-api/pointValue', db.createPointValues)
+app.post('/dvc-calc-api/pointValue/table', db.createPointValuesFromTable)
 app.post('/dvc-calc-api/pointBlock', db.createPointBlock)
 // app.put('/users/:id', db.updateUser)
 // app.delete('/users/:id', db.deleteUser)
