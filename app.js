@@ -2,6 +2,11 @@ const express = require('express');
 const bodyParser = require('body-parser')
 const cors = require('cors');
 const db = require('./queries')
+const resortRouter = require('./routes/resortRouter')
+const roomTypeRouter = require('./routes/roomTypeRouter')
+const viewTypeRouter = require('./routes/viewTypeRouter')
+const pointBlockRouter = require('./routes/pointBlockRouter')
+const pointValueRouter = require('./routes/pointValueRouter')
 
 const app = express();
 app.use(cors());
@@ -13,23 +18,16 @@ app.get('/', function (req, res) {
   res.json({ info: 'Node.js, Express, and Postgres API' })
 });
 
-app.get('/dvc-calc-api/resorts', db.getResorts)
-app.get('/dvc-calc-api/resorts/:id', db.getResortById)
-app.get('/dvc-calc-api/roomTypes', db.getRoomTypes)
-app.get('/dvc-calc-api/roomTypes/:id', db.getRoomTypesByResort)
-app.get('/dvc-calc-api/viewTypes', db.getViewTypes)
-app.get('/dvc-calc-api/viewTypes/:id', db.getViewTypesByRoomType)
-app.get('/dvc-calc-api/pointValue/:id', db.getPointValuesByViewType)
+app.use('/dvc-calc-api/resort', resortRouter)
+app.use('/dvc-calc-api/roomType', roomTypeRouter)
+app.use('/dvc-calc-api/viewType', viewTypeRouter)
+app.use('/dvc-calc-api/pointBlock', pointBlockRouter)
+app.use('/dvc-calc-api/pointValue', pointValueRouter)
+
 app.get('/dvc-calc-api/pointAmount/:id/:beginDate/:endDate', db.getPointAmount)
-app.get('/dvc-calc-api/pointBlock/:groupId/:year', db.getPointBlocks);
 app.get('/dvc-calc-api/pointBlockGroup', db.getPointBlockGroups);
 app.get('/dvc-calc-api/dateRange/:id', db.getDateRangesByPointBlockId);
 
-app.post('/dvc-calc-api/roomType', db.createRoomType)
-app.post('/dvc-calc-api/viewType', db.createViewType)
-app.post('/dvc-calc-api/pointValue', db.createPointValues)
-app.post('/dvc-calc-api/pointValue/table', db.createPointValuesFromTable)
-app.post('/dvc-calc-api/pointBlock', db.createPointBlock)
 // app.put('/users/:id', db.updateUser)
 // app.delete('/users/:id', db.deleteUser)
 
