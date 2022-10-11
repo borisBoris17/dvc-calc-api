@@ -14,9 +14,9 @@ router.get('/', function (request, response) {
   });
 });
 
-router.get('/:id', function (request, response) {
-  const id = parseInt(request.params.id)
-  pool.query('SELECT * FROM room_type WHERE room_type_id = $1 ORDER BY room_type_id ASC', [id], (error, results) => {
+router.get('/:resortId', function (request, response) {
+  const resortId = parseInt(request.params.resortId)
+  pool.query('SELECT * FROM room_type WHERE resort_id = $1 ORDER BY room_type_id ASC', [resortId], (error, results) => {
     if (error) {
       throw error
     }
