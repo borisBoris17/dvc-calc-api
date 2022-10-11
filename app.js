@@ -7,6 +7,7 @@ const roomTypeRouter = require('./routes/roomTypeRouter')
 const viewTypeRouter = require('./routes/viewTypeRouter')
 const pointBlockRouter = require('./routes/pointBlockRouter')
 const pointValueRouter = require('./routes/pointValueRouter')
+const accountRouter = require('./routes/accountRouter')
 
 const app = express();
 app.use(cors());
@@ -23,6 +24,7 @@ app.use('/dvc-calc-api/roomType', roomTypeRouter)
 app.use('/dvc-calc-api/viewType', viewTypeRouter)
 app.use('/dvc-calc-api/pointBlock', pointBlockRouter)
 app.use('/dvc-calc-api/pointValue', pointValueRouter)
+app.use('/dvc-calc-api/account', accountRouter)
 
 app.get('/dvc-calc-api/pointAmount/:id/:beginDate/:endDate', db.getPointAmount)
 app.get('/dvc-calc-api/pointBlockGroup', db.getPointBlockGroups);
