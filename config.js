@@ -8,7 +8,7 @@ const config = {
     password: env.DB_PASSWORD || 'password',
     database: env.DB_NAME || 'dvc_api',
   },
-  listPerPage: env.LIST_PER_PAGE || 10,
+  TOKEN_KEY: env.TOKEN_KEY || 'sometoken',
 };
 
 module.exports = config;

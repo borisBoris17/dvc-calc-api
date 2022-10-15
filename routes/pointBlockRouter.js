@@ -5,6 +5,7 @@ const pool = new Pool(config.db);
 const express = require('express');
 const router = express.Router();
 const util = require('../utils/util');
+const auth = require("../middleware/auth");
 
 router.get('/:groupId/:year', function (request, response) {
   const groupId = parseInt(request.params.groupId);
@@ -26,7 +27,7 @@ router.get('/', function (request, response) {
   });
 });
 
-router.post('/', function (request, response) {
+router.post('/', auth, function (request, response) {
   const { pointBlockGroupId, pointBlockYear, valueIndex, dateRanges } = request.body;
   savePointBlock(pointBlockGroupId, pointBlockYear, valueIndex).then(async (pointBlockId) => {
     const numDateRangesInserted = await saveNewDateRangeForPointBlock(pointBlockId, dateRanges);

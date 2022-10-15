@@ -1,12 +1,14 @@
 const Pool = require('pg').Pool
 const config = require('../config');
 const pool = new Pool(config.db);
+const auth = require("../middleware/auth");
 
 const express = require('express');
 const router = express.Router();
 
 router.get('/', function (request, response) {
-  pool.query('SELECT * FROM resort ORDER BY resort_id ASC', (error, results) => {
+  pool.query('SELECT * FROM resort ORDER BY resort_id ASC',
+  (error, results) => {
     if (error) {
       throw error
     }

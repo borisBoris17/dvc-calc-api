@@ -5,6 +5,7 @@ const pool = new Pool(config.db);
 const express = require('express');
 const router = express.Router();
 const util = require('../utils/util');
+const auth = require("../middleware/auth");
 
 router.get('/:id', function (request, response) {
   const id = parseInt(request.params.id)
@@ -16,7 +17,7 @@ router.get('/:id', function (request, response) {
   });
 });
 
-router.post('/', async function (request, response) {
+router.post('/', auth, async function (request, response) {
   const { pointValues } = request.body
   const numPointValuesAdded = await saveNewPointValue(pointValues);
   if (numPointValuesAdded > 0) {
@@ -26,7 +27,7 @@ router.post('/', async function (request, response) {
   }
 })
 
-router.post('/table', async function (request, response) {
+router.post('/table', auth, async function (request, response) {
   const { pointValuesFromTable } = request.body
   const dateRanges = await saveNewPointValueFromTable(pointValuesFromTable);
   if (dateRanges != undefined) {
