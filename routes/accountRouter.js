@@ -78,9 +78,7 @@ function checkForExistingUser(username) {
       if (error) {
         throw error
       }
-      console.log(results);
-      console.log(results.rows);
-      if (results) {
+      if (results.rows.length > 0) {
         resolve(results.rows[0].username);
       }
       resolve('');
