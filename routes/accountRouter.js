@@ -67,7 +67,7 @@ router.post('/login', async function (request, response) {
       // return new user
       response.status(200).json(user);
     } else {
-      response.status(200).send(`Login Failed`);
+      response.status(403).send(`Login Failed`);
     }
   });
 });
