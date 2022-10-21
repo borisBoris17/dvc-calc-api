@@ -32,7 +32,7 @@ router.post('/', auth, function (request, response) {
     if (error) {
       throw error
     }
-    response.status(201).send(`Room Type added with ID: ${results.rows[0].room_type_id}`)
+    response.status(201).send(results.rows[0])
   });
 })
 

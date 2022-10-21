@@ -33,7 +33,7 @@ router.post('/', auth, function (request, response) {
     if (error) {
       throw error
     }
-    response.status(201).send(`View Type added with ID: ${results.rows[0].view_type_id}`)
+    response.status(201).send(results.rows[0]);
   })
 })
 
