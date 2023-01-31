@@ -27,6 +27,7 @@ app.use('/dvc-calc-api/pointValue', pointValueRouter)
 app.use('/dvc-calc-api/account', accountRouter)
 
 app.get('/dvc-calc-api/pointAmount/:id/:beginDate/:endDate', db.getPointAmount)
+app.get('/dvc-calc-api/pointAmount/:beginDate/:endDate', db.getAllPointAmounts)
 app.get('/dvc-calc-api/pointBlockGroup', db.getPointBlockGroups);
 app.get('/dvc-calc-api/dateRange/:id', db.getDateRangesByPointBlockId);
 
